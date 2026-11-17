@@ -1,0 +1,43 @@
+{
+  "name": "@illager_aris/dsh-chat-only",
+  "version": "0.1.0",
+  "description": "DSH agent preset \"Chat Only\": a conversation-only mode whose model sees nothing but web_search and web_fetch.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "cordis.patch.yml"
+  ],
+  "license": "MIT",
+  "author": "illagerCPR",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/illagerCPR/dsh-chat-only.git"
+  },
+  "homepage": "https://github.com/illagerCPR/dsh-chat-only#readme",
+  "bugs": {
+    "url": "https://github.com/illagerCPR/dsh-chat-only/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "agent-preset",
+    "chat-only",
+    "web-search"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

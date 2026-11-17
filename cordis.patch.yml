@@ -1,0 +1,69 @@
+# Bundle patch for @illager_aris/dsh-chat-only.
+#
+# Declares ONE agent preset, `chat-only`, whose model-visible toolset is
+# exactly `web_search` and `web_fetch`. Everything else the harness would
+# normally hand a session — shell, filesystem, jobs, skills, todos, goals,
+# plan mode, delegation, MCP resources, and every host-plane tool a profile
+# plugin registers (memory, diagrams, browser, task board, …) — is removed by
+# the `chat-only-guard` row below.
+#
+# WHY A GUARD ROW AND NOT JUST A SHORT PLUGIN LIST: the Web composition moves
+# most tool rows into presets, but a number of tools still register on the
+# HOST plane and are inherited by every preset (working_directory, MCP
+# resources, and whatever profile plugins add). Omitting rows cannot hide
+# those, so the guard applies an allow mask to each Agent scope.
+- insert:
+    - id: preset-chat-only
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: chat-only
+        name: Chat Only
+        description: 仅对话模式：模型只能联网搜索与抓取网页，没有 Shell、文件、代码执行等任何其他工具。
+        order: 5
+        plugins:
+          # Identity. `complete` stays false on purpose: the tool descriptions
+          # and the runtime-context snapshot must still reach the model, and a
+          # complete persona would suppress them.
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              prefix: |-
+                You are a conversation assistant with live web access. You can search the web with web_search and read a specific page with web_fetch; those two are your only tools. You have no shell, no filesystem, no code execution, and no way to change anything on this machine — do not claim otherwise, and do not offer to run commands, edit files, or inspect a repository. When a question needs current facts, search; when it needs the full text of a page whose URL you already have, fetch it. Cite the URLs you used as markdown links. Answer in the user's language.
+
+          # Clock context: not a tool, and a conversation needs it.
+          - id: time-context
+            name: '@deepseek-ai/dsh-time-context'
+
+          # Long-conversation compaction. Not a tool: it keeps a chat alive
+          # past the context window without exposing anything to the model.
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+
+          # The only two tools this preset registers.
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              search: true
+              fetch: true
+              searchTimeoutMs: 60000
+
+          # Hides every inherited tool, then keeps the two above. Must stay
+          # LAST so the web tools are already registered when an Agent scope
+          # is masked.
+          - id: chat-only-guard
+            name: '@illager_aris/dsh-chat-only'
